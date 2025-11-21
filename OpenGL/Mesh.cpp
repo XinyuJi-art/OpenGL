@@ -157,45 +157,42 @@ void Mesh::LoadObj(const std::string& _filename)
 
 	for (auto& currentMesh : loader.LoadedMeshes)
 	{
-		for (auto& vertex : currentMesh.Vertices)
+		std::vector<objl::Vector3> tangents;
+		std::vector<objl::Vector3> bitangents;
+		std::vector<objl::Vertex> triangle;
+		objl::Vector3 tangent;
+		objl::Vector3 bitangent;
+		for (unsigned int j = 0; j < currentMesh.Vertices.size(); j += 3)
 		{
-			std::vector<objl::Vector3> tangents;
-			std::vector<objl::Vector3> bitangents;
-			std::vector<objl::Vertex> triangle;
-			objl::Vector3 tangent;
-			objl::Vector3 bitangent;
-			for (unsigned int j = 0; j < currentMesh.Vertices.size(); j += 3)
-			{
-				triangle.clear();
-				triangle.push_back(currentMesh.Vertices[j]);
-				triangle.push_back(currentMesh.Vertices[j + 1]);
-				triangle.push_back(currentMesh.Vertices[j + 2]);
-				CalculateTangents(triangle, tangent, bitangent);
-				tangents.push_back(tangent);
-				bitangents.push_back(bitangent);
-			}
+			triangle.clear();
+			triangle.push_back(currentMesh.Vertices[j]);
+			triangle.push_back(currentMesh.Vertices[j + 1]);
+			triangle.push_back(currentMesh.Vertices[j + 2]);
+			CalculateTangents(triangle, tangent, bitangent);
+			tangents.push_back(tangent);
+			bitangents.push_back(bitangent);
+		}
 
-			for (unsigned int j = 0; j < currentMesh.Vertices.size(); j++)
-			{
-				vertexData.push_back(currentMesh.Vertices[j].Position.X);
-				vertexData.push_back(currentMesh.Vertices[j].Position.Y);
-				vertexData.push_back(currentMesh.Vertices[j].Position.Z);
-				vertexData.push_back(currentMesh.Vertices[j].Normal.X);
-				vertexData.push_back(currentMesh.Vertices[j].Normal.Y);
-				vertexData.push_back(currentMesh.Vertices[j].Normal.Z);
-				vertexData.push_back(currentMesh.Vertices[j].TextureCoordinate.X);
-				vertexData.push_back(currentMesh.Vertices[j].TextureCoordinate.Y);
+		for (unsigned int j = 0; j < currentMesh.Vertices.size(); j++)
+		{
+			vertexData.push_back(currentMesh.Vertices[j].Position.X);
+			vertexData.push_back(currentMesh.Vertices[j].Position.Y);
+			vertexData.push_back(currentMesh.Vertices[j].Position.Z);
+			vertexData.push_back(currentMesh.Vertices[j].Normal.X);
+			vertexData.push_back(currentMesh.Vertices[j].Normal.Y);
+			vertexData.push_back(currentMesh.Vertices[j].Normal.Z);
+			vertexData.push_back(currentMesh.Vertices[j].TextureCoordinate.X);
+			vertexData.push_back(currentMesh.Vertices[j].TextureCoordinate.Y);
 
-				if (loader.LoadedMaterials[0].map_bump != "")
-				{
-					int index = j / 3;
-					vertexData.push_back(tangents[index].X);
-					vertexData.push_back(tangents[index].Y);
-					vertexData.push_back(tangents[index].Z);
-					vertexData.push_back(bitangents[index].X);
-					vertexData.push_back(bitangents[index].Y);
-					vertexData.push_back(bitangents[index].Z);
-				}
+			if (loader.LoadedMaterials[0].map_bump != "")
+			{
+				int index = j / 3;
+				vertexData.push_back(tangents[index].X);
+				vertexData.push_back(tangents[index].Y);
+				vertexData.push_back(tangents[index].Z);
+				vertexData.push_back(bitangents[index].X);
+				vertexData.push_back(bitangents[index].Y);
+				vertexData.push_back(bitangents[index].Z);
 			}
 		}
 	}

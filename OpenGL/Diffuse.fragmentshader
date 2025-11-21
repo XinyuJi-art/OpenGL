@@ -38,76 +38,6 @@ uniform Light light[NUM_LIGHTS];
 uniform int numLights;
 uniform bool EnableNormalMaps = false;
 
-vec3 CalculateDirectionalLight(Light light)
-{
-    vec3 lightDir = (-light.direction);
-    float lambertianStrength = dot(lightDir, retNormal); // Get Lambertian effect
-    
-    // Calculate specular lighting
-    vec3 refl = reflect(-lightDir, retNormal);
-    float specularStrength = pow(max(dot(retViewDirection, refl), 0.0f), material.specularStrength);
-    
-    vec3 ambient = texture(material.diffuseTexture, retTexCoord).rgb * light.ambientColor;
-    vec3 lambertian = lambertianStrength * texture(material.diffuseTexture, retTexCoord).rgb * light.diffuseColor;
-    vec3 specular = specularStrength * texture(material.specularTexture, retTexCoord).rgb * light.specularColor;
-    
-    // Calculate final color
-    return vec4(ambient + lambertian + specular, 1.0f);
-}
-
-vec3 CalculatePointLight(Light light)
-{
-    vec3 lightDir = normalize(light.position - retFragPos); // Normalize, for correct dot product results
-    float lambertianStrength = max(dot(lightDir, retNormal), 0.0f); // Get Lambertian effect
-    
-    // Calculate specular lighting
-    vec3 refl = reflect(-lightDir, retNormal);
-    float specularStrength = pow(max(dot(retViewDirection, refl), 0.0f), material.specularStrength);
-    
-    // Calculate Point Lighting
-    float distance = length(light.position - retFragPos);
-    //float att = 1.0f / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
-    
-    vec3 ambient = texture(material.diffuseTexture, retTexCoord).rgb * light.ambientColor;
-    vec3 lambertian = lambertianStrength * texture(material.diffuseTexture, retTexCoord).rgb * light.diffuseColor;
-    vec3 specular = specularStrength * texture(material.specularTexture, retTexCoord).rgb * light.specularColor;
-    
-    return vec4(ambient + lambertian + specular, 1.0f);
-}
-
-vec3 CalculateSpotLight(Light light)
-{
-    vec3 lightDir = normalize(light.position - retFragPos);
-
-		float a = cos(light.coneAngle);
-		float d = dot(normalize(light.direction), -lightDir);
-		if (a < d)
-		{
-			float lambertianStrength = dot(lightDir, retNormal);
-
-			vec3 refl = reflect(-lightDir, retNormal);
-			float specularStrength = pow(max(dot(retViewDirection, refl), 0.0f), material.specularStrength);
-	
-			float distance = length(light.position - retFragPos);
-			float att = 1.0f / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
-			att *= 1 - pow(a / d, light.falloff); 
-			vec3 ambient = texture(material.diffuseTexture, retTexCoord).rgb * light.ambientColor / numLights;
-			vec3 lambertian = lambertianStrength * texture(material.diffuseTexture, retTexCoord).rgb * light.diffuseColor * att;
-			vec3 specular = specularStrength * texture(material.specularTexture, retTexCoord).rgb * light.specularColor * att;
-	
-			//FragColor = vec4(ambient + lambertian + specular, 1.0f);
-			//finalColor += vec4(ambient + lambertian + specular, 1.0f);
-            return ambient + lambertian + specular;
-		}
-		else
-		{
-			vec3 ambient = texture(material.diffuseTexture, retTexCoord).rgb * light.ambientColor / numLights;
-			//finalColor += vec4(ambient, 1.0f);
-            return ambient;
-		}
-
-}
-
 void main()
 {
     vec4 diffColor = texture(material.diffuseTexture, retTexCoord);
@@ -135,7 +65,7 @@ void main()
         vec3 refl = reflect(-lightDir, normal);
         float specularStrength = pow(max(dot(retViewDirection, refl), 0.0f), material.specularStrength);
         
-        vec3 ambient = diffColor.rgb * light[i].ambientColor / 1;
+        vec3 ambient = diffColor.rgb * light[i].ambientColor / NUM_LIGHTS;
         vec3 lambertian = lambertianStrength * diffColor.rgb * light[i].diffuseColor;
         vec3 specular = specularStrength * texture(material.specularTexture, retTexCoord).rgb * light[i].specularColor;
         finalColor += vec4(ambient + lambertian + specular, 1.0f);
