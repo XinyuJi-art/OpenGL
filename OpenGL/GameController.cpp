@@ -198,8 +198,8 @@ void GameController::RunGame()
  //       }
 	//}
 
-    /*OpenGL::ToolWindow^ toolWindow = gcnew OpenGL::ToolWindow();
-    toolWindow->Show(); */
+    OpenGL::ToolWindow^ toolWindow = gcnew OpenGL::ToolWindow();
+    toolWindow->Show();
 
     GLFWwindow* window = WindowController::GetInstance().GetWindow();
 
