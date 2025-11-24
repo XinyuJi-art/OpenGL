@@ -48,7 +48,7 @@ vec3 CalculateDirectionalLight(Light light)
     vec3 specular = specularStrength * texture(material.specularTexture, retTexCoords).rgb * light.specularColor;
     
     // Calculate final color
-    return vec4(ambient + lambertian + specular, 1.0f);
+    return ambient + lambertian + specular;
 }
 
 vec3 CalculatePointLight(Light light)
@@ -68,7 +68,7 @@ vec3 CalculatePointLight(Light light)
     vec3 lambertian = lambertianStrength * texture(material.diffuseTexture, retTexCoords).rgb * light.diffuseColor;
     vec3 specular = specularStrength * texture(material.specularTexture, retTexCoords).rgb * light.specularColor;
     
-    return vec4(ambient + lambertian + specular, 1.0f);
+    return ambient + lambertian + specular;
 }
 
 vec3 CalculateSpotLight(Light light)
