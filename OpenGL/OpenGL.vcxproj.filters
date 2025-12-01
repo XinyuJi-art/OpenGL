@@ -77,7 +77,6 @@
     <None Include="Color.vertexshader">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Scene.json" />
     <None Include="Font.vertexshader">
       <Filter>Shaders</Filter>
     </None>
@@ -88,6 +87,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="Pointlightshader.fragmentshader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="PositionColor.vertexshader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="PositionColor.fragmentshader">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

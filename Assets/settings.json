@@ -7,9 +7,9 @@
   },
   "Camera": {
     "Position": {
-      "x": 5.0,
-      "y": 5.0,
-      "z": 5.0
+      "x": 0.0,
+      "y": 0.0,
+      "z": 10.0
     },
     "LookAt": {
       "x": 0.0,
@@ -35,6 +35,11 @@
       "name": "Font",
       "vertex": "Font.vertexshader",
       "fragment": "Font.fragmentshader"
+    },
+    {
+      "name": "PositionColor",
+      "vertex": "PositionColor.vertexshader",
+      "fragment": "PositionColor.fragmentshader"
     }
   ]
 }

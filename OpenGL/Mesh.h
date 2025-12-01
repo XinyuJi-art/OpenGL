@@ -50,6 +50,7 @@ public:
 	float GetConeAngle() { return spotLightconeAngle; }
 	float GetFalloff() { return spotLightfalloff; }
 
+    void SetShader(Shader* newShader) { this->shader = newShader;}
     void SetLightType(LightType type) { lightType = type; }
     LightType GetLightType() const { return lightType; }
 

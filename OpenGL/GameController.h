@@ -6,6 +6,12 @@
 #include "StandardIncludes.h"
 #include "TextController.h"
 
+enum class SceneMode {
+    MOVE_LIGHT = 0,
+    COLOR_BY_POSITION = 1,
+    MOVE_CUBES_TO_SPHERE = 2
+};
+
 class Mesh;
 
 class GameController
@@ -19,7 +25,7 @@ public:
 
     void Initialize();
     void RunGame();
-
+    void Load();
     Shader* GetShader(const char* shaderName)
     {
 		auto itr = shaders.find(shaderName);
@@ -35,16 +41,29 @@ public:
 	}
 
 private:
-    void Load();
+    void HandleResetRequests();
+    void RenderMesh(const std::string& meshKey);
+    void HandleLightMovementScene(GLFWwindow* activeWindow);
+    void HandlePositionColorScene(GLFWwindow* activeWindow);
+    void HandleCubesToSphereScene(GLFWwindow* activeWindow);
 
+    Mesh* GetLight() {
+        if (!lights.empty()) return lights.front();
+        return nullptr;
+    }
 private:
-    std::map<std::string, Shader*> shaders;
 	std::map<std::string, Font*> fonts;
-    std::list<Mesh*> meshes;
-	std::list<Mesh*> lights;
-
+    std::map<std::string, Mesh*> meshes;
+    std::map<std::string, Shader*> shaders;
+    std::list<Mesh*> lights;
+    std::list<Mesh*> cubeMeshes;
 	Camera* camera = nullptr;
 	TextController* textController = nullptr;
+    Mesh* sphereMesh = nullptr;
+    const float CUBE_SPEED = 2.0f;
+    const float DELETE_DISTANCE = 0.5f;
+    Mesh* suzanneMesh = nullptr;
+    glm::vec3 suzannePosition = glm::vec3(0.0f);
 
     GLuint vao;
 

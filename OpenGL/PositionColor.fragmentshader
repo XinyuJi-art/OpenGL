@@ -1,0 +1,25 @@
+#version 330 core
+
+in vec3 retFragPos;
+in vec2 retTexCoord;
+
+out vec4 FragColor;
+
+struct Material
+{
+	sampler2D diffuseTexture;
+};
+
+uniform Material material;
+
+void main()
+{
+	vec4 diffColor = texture(material.diffuseTexture, retTexCoord);
+    
+    vec3 positionTint = abs(retFragPos) * 1.0f;
+    float BASE_BRIGHTNESS_BOOST = 1.0f; 
+    vec3 modulationFactor = vec3(BASE_BRIGHTNESS_BOOST) + positionTint;
+    vec3 finalColor = diffColor.rgb * modulationFactor; 
+    finalColor = clamp(finalColor, 0.0, 1.0);
+	FragColor = vec4(finalColor, 1.0f);
+}

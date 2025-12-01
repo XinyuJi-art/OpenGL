@@ -19,10 +19,9 @@ void GameController::Initialize()
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 
-    Load();
+    glfwSetWindowUserPointer(window, this);
 
-    /*camera = new Camera(WindowController::GetInstance().GetResolution());
-	camera->LookAt({ 10, 10, 10 }, { 0, 0, 0 }, { 0, 1, 0 });*/
+    Load();
 }
 
 void GameController::Load()
@@ -102,28 +101,37 @@ void GameController::Load()
 		std::istreambuf_iterator<char>());
 	document = json::JSON::Load(str);
 
-    if (document.hasKey("Lights"))
+    if (document.hasKey("Light"))
     {
-        json::JSON& lightsJSON = document["Lights"];
-        for (auto& lightJSON : lightsJSON.ArrayRange())
-        {
-            Mesh* light = new Mesh();
-            light->Create(lightJSON);
-			light->SetCameraPosition(camera->GetPosition());
-			lights.push_back(light);
-        }
+        json::JSON& lightJSON = document["Light"];
+        Mesh* light = new Mesh();
+        light->Create(lightJSON);
+        light->SetCameraPosition(camera->GetPosition());
+		lights.push_back(light);
     }
 
-    if (document.hasKey("Meshes"))
+    if (document.hasKey("Suzanne"))
     {
-        json::JSON& meshesJSON = document["Meshes"];
-        for (auto& meshJSON : meshesJSON.ArrayRange())
-        {
-            Mesh* mesh = new Mesh();
-            mesh->Create(meshJSON);
-			mesh->SetCameraPosition(camera->GetPosition());
-			meshes.push_back(mesh);
-        }
+        json::JSON& monkeyJSON = document["Suzanne"];
+        Mesh* monkey = new Mesh();
+        monkey->Create(monkeyJSON);
+        monkey->SetCameraPosition(camera->GetPosition());
+
+        meshes.emplace("Suzanne", monkey);
+
+        suzanneMesh = monkey;
+        suzannePosition = monkey->GetPosition();
+    }
+
+    if (document.hasKey("HatMonkeyBall"))
+    {
+        json::JSON& ballJSON = document["HatMonkeyBall"];
+        Mesh* mesh = new Mesh();
+        mesh->Create(ballJSON);
+        mesh->SetCameraPosition(camera->GetPosition());
+
+        meshes.emplace("Sphere", mesh);
+        sphereMesh = mesh;
     }
 
     #pragma region Fonts
@@ -152,58 +160,156 @@ void GameController::Load()
         }
     #pragma endregion
 #pragma endregion
+
+}
+
+
+void GameController::HandleResetRequests()
+{
+    if (OpenGL::ToolWindow::ConsumeResetLight())
+    {
+        Mesh* light = lights.front();
+        glm::vec3 currentLightPos = light->GetPosition();
+        light->SetPosition(glm::vec3(0, 0, 0));
+    }
+
+    if (OpenGL::ToolWindow::ConsumeResetSuzanne())
+    {
+        suzanneMesh->SetPosition(glm::vec3(0.0f));
+        suzannePosition = glm::vec3(0.0f);
+    }
+}
+
+void GameController::RenderMesh(const std::string& meshKey)
+{
+    if (meshes.count(meshKey))
+    {
+        Mesh* currentMesh = meshes[meshKey];
+        glm::vec3 currentRot = currentMesh->GetRotation();
+        float rotRate = currentMesh->GetRotationRate();
+
+        currentMesh->SetRotation(currentRot + Time::Instance().DeltaTime() * glm::vec3(0.0f, rotRate, 0.0f));
+
+        currentMesh->Render(camera->GetProjection() * camera->GetView(), lights, 1);
+    }
+}
+
+// Move Light
+void GameController::HandleLightMovementScene(GLFWwindow* activeWindow)
+{
+    Mesh* sceneLight = GetLight();
+    if (sceneLight == nullptr) return;
+
+    Resolution screenRes = WindowController::GetInstance().GetResolution();
+    double mouseX, mouseY;
+    glfwGetCursorPos(activeWindow, &mouseX, &mouseY);
+    glm::vec3 worldCursorMove;
+
+    if (glfwGetMouseButton(activeWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+    {
+        worldCursorMove = glm::vec3(
+            (mouseX - screenRes.width / 2) * Time::Instance().DeltaTime() * 0.05f,
+            (screenRes.height / 2 - mouseY) * Time::Instance().DeltaTime() * 0.05f,
+            0.0f
+        );
+        sceneLight->SetPosition(sceneLight->GetPosition() + worldCursorMove);
+    }
+    else if (glfwGetMouseButton(activeWindow, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
+    {
+        worldCursorMove = glm::vec3(0.0f, 0.0f, (screenRes.height / 2 - mouseY) * Time::Instance().DeltaTime() * -0.01f);
+        sceneLight->SetPosition(sceneLight->GetPosition() + worldCursorMove);
+    }
+
+    sceneLight->Render(camera->GetProjection() * camera->GetView(), lights);
+
+    Shader* diffShader = shaders["Diffuse"];
+    Mesh* suzanne = meshes["Suzanne"];
+
+    if (suzanne != nullptr) {
+        suzanne->SetShader(diffShader);
+        RenderMesh("Suzanne");
+    }
+
+    glm::vec3 posDisplay = sceneLight->GetPosition();
+    std::string outputText = "Light Position: X=" +
+        std::to_string(posDisplay.x) + ", Y=" +
+        std::to_string(posDisplay.y) + ", Z=" +
+        std::to_string(posDisplay.z);
+
+    textController->RenderText(outputText, 20, 60, 0.4f, { 1.0f, 1.0f, 0.0f });
+}
+
+// Color By Position
+void GameController::HandlePositionColorScene(GLFWwindow* activeWindow)
+{
+    Mesh* suzanneTarget = meshes["Suzanne"];
+    if (suzanneTarget == nullptr) return;
+
+    Resolution screenRes = WindowController::GetInstance().GetResolution();
+    double mouseX, mouseY;
+    glfwGetCursorPos(activeWindow, &mouseX, &mouseY);
+    glm::vec3 worldCursorMove;
+
+
+    if (glfwGetMouseButton(activeWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+    {
+        worldCursorMove = glm::vec3(
+            (mouseX - screenRes.width / 2) * Time::Instance().DeltaTime() * 0.05f,
+            (screenRes.height / 2 - mouseY) * Time::Instance().DeltaTime() * 0.05f,
+            0.0f
+        );
+        suzanneTarget->SetPosition(suzanneTarget->GetPosition() + worldCursorMove);
+    }
+    else if (glfwGetMouseButton(activeWindow, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
+    {
+        worldCursorMove = glm::vec3(0.0f, 0.0f, (screenRes.height / 2 - mouseY) * Time::Instance().DeltaTime() * -0.01f);
+        suzanneTarget->SetPosition(suzanneTarget->GetPosition() + worldCursorMove);
+    }
+
+    Shader* posColorShader = shaders["PositionColor"];
+
+    suzanneTarget->SetShader(posColorShader);
+    RenderMesh("Suzanne");
+
+    glm::vec3 posDisplay = suzanneTarget->GetPosition();
+    std::string outputText = "Suzanne Position: X=" +
+        std::to_string(posDisplay.x) + ", Y=" +
+        std::to_string(posDisplay.y) + ", Z=" +
+        std::to_string(posDisplay.z);
+
+    textController->RenderText(outputText, 20, 60, 0.4f, { 1.0f, 1.0f, 0.0f });
+}
+
+// Move Cubes to Sphere(Not finished)
+void GameController::HandleCubesToSphereScene(GLFWwindow* activeWindow)
+{
+    Mesh* ballTarget = meshes["Sphere"];
+    if (ballTarget == nullptr) return;
+
+    Shader* diffShader = shaders["Diffuse"];
+    sphereMesh->SetShader(diffShader);
+
+    RenderMesh("Sphere");
+
+    if (meshes.count("Light"))
+    {
+        RenderMesh("Light");
+    }
+
+    glDisable(GL_DEPTH_TEST);
+    std::string messageOutput = "Total Cubes: " + std::to_string(cubeMeshes.size());
+    textController->RenderText(messageOutput, 20, 60, 0.5f, { 1.0f, 1.0f, 0.0f });
+    glEnable(GL_DEPTH_TEST);
 }
 
 void GameController::RunGame()
 {
-	//shaderColor = new Shader();
-	//shaderColor->LoadShaders("Color.vertexshader", "Color.fragmentshader");
-	//shaderDiffuse = new Shader();
-	//shaderDiffuse->LoadShaders("Diffuse.vertexshader", "Diffuse.fragmentshader");
-
-	///*meshLight = new Mesh();
-	//meshLight->Create(shaderColor);
- //   meshLight->SetPosition({ 10.0f, 0.0f, 0.0f });
-	//meshLight->SetScale({ 0.5f,0.5f,0.5f });*/
-
- //   for(int i = 0; i < 4; i++)
- //   {
- //       Mesh* light = new Mesh();
- //       light->Create(shaderColor);
- //       light->SetPosition({ 5.0f, 0.0f, (float)i * 3.0f - 4.0f });
-	//	light->SetLightDirection(glm::normalize(glm::vec3({ 0.0f, 0.0f, (float)i * 3.0f - 4.0f }) - light->GetPosition()));
- //       light->SetLightColor({ glm::linearRand(0.0f, 1.0f), glm::linearRand(0.0f, 1.0f), glm::linearRand(0.0f, 1.0f)});
- //       light->SetScale({ 0.1f,0.1f,0.1f });
- //       lights.push_back(light);
-	//}
-
- //   for (int row = 0; row < 10; row++)
- //   {
- //       for (int col = 0; col < 10; col++)
- //       {
- //           /*Mesh* mesh = new Mesh();
- //           mesh->Create(shaderDiffuse);
- //           mesh->SetLightColor({ 1.0f, 1.0f, 1.0f });
- //           mesh->SetLightPosition(meshLight->GetPosition());
- //           mesh->SetCameraPosition(camera->GetPosition());
- //           mesh->SetScale({ 1.0f, 1.0f, 1.0f });
- //           mesh->SetPosition({ 0.0f, (float)row * 2.0f - 9.0f, (float)col * 2.0f - 9.0f});;
- //           meshes.push_back(mesh);*/
-	//		Mesh* mesh = new Mesh();
-	//		mesh->Create(shaderDiffuse);
-	//		mesh->SetCameraPosition(camera->GetPosition());
-	//		mesh->SetScale({ 1.0f, 1.0f, 1.0f });
-	//		mesh->SetPosition({ 0.0f, (float)row * 2.0f - 9.0f, (float)col * 2.0f - 9.0f });
-	//		meshes.push_back(mesh);
- //       }
-	//}
-
-    /*OpenGL::ToolWindow^ toolWindow = gcnew OpenGL::ToolWindow();
-    toolWindow->Show(); */
+    OpenGL::ToolWindow^ toolWindow = gcnew OpenGL::ToolWindow();
+    toolWindow->Show();
 
     GLFWwindow* window = WindowController::GetInstance().GetWindow();
 
-	Time::Instance().Initialize();
+    Time::Instance().Initialize();
 
     int currentInstanceCount = 100;
     bool upKeyPressed = false;
@@ -211,66 +317,58 @@ void GameController::RunGame()
 
     do
     {
-		Time::Instance().Update();
-
+        Time::Instance().Update();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+        HandleResetRequests();
+
+        if (toolWindow->moveLight)
         {
-            if (currentInstanceCount < 1000)
-            {
-                currentInstanceCount++;
-            }
+            HandleLightMovementScene(window);
+        }
+        else if (toolWindow->colorPos)
+        {
+            HandlePositionColorScene(window);
+        }
+        else if (toolWindow->moveCubes)
+        {
+            HandleCubesToSphereScene(window);
+
+            std::string messageOutput = "Total Cubes: " + std::to_string(cubeMeshes.size());
+            textController->RenderText(messageOutput, 20, 60, 0.5f, { 1.0f, 1.0f, 0.0f });
         }
 
-        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        {
-            if (currentInstanceCount > 1)
-            {
-                currentInstanceCount--;
-            }
-        }
-
-
-        for (auto& light : lights)
-        {
-            light->Render(camera->GetProjection() * camera->GetView(), lights);
-        }
-
-        for (auto& mesh : meshes)
-        {
-            mesh->SetRotation(mesh->GetRotation() + glm::vec3(0.0f, mesh->GetRotationRate() * Time::Instance().DeltaTime(), 0.0f));
-            mesh->Render(camera->GetProjection() * camera->GetView(), lights, currentInstanceCount);
-		}   
-
-        std::string fpsText = "FPS: " + std::to_string(Time::Instance().FPS());
-        textController->RenderText(fpsText, 20, 100, 0.5f, {1.0f, 1.0f, 0.0f});
+        /*std::string fpsText = "FPS: " + std::to_string(Time::Instance().FPS());
+        textController->RenderText(fpsText, 20, 100, 0.5f, { 1.0f, 1.0f, 0.0f });*/
 
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-    } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
-        glfwWindowShouldClose(window) == 0);
+    } while (
+        glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
+        glfwWindowShouldClose(window) == 0
+        );
 
-    for(auto& mesh : meshes)
-    {
-        delete mesh;
-	}
-    for (auto& light : lights)
-    {
-        delete light;
-	}
-    for (auto& shader : shaders)
-    {
-		delete shader.second;
+        for (auto& mesh : meshes)
+        {
+            delete mesh.second;
+        }
+        for (auto& light : lights)
+        {
+            delete light;
+        }
+        for (auto& shader : shaders)
+        {
+            delete shader.second;
+        }
+        for (auto& font : fonts)
+        {
+            delete font.second;
+        }
+        if (textController != nullptr)
+        {
+            delete textController;
+        }
+        delete camera;
+
     }
-    for (auto& font : fonts)
-	{
-		delete font.second;
-	}
-    if (textController != nullptr)
-    {
-        delete textController;
-	}
-    delete camera;
-}
