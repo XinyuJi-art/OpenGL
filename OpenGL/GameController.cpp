@@ -123,6 +123,19 @@ void GameController::Load()
         suzannePosition = monkey->GetPosition();
     }
 
+    if (document.hasKey("Suzanne"))
+    {
+        json::JSON& monkeyJSON = document["Suzanne"];
+        Mesh* monkey = new Mesh();
+        monkey->Create(monkeyJSON);
+        monkey->SetCameraPosition(camera->GetPosition());
+
+        meshes.emplace("Suzanne", monkey);
+
+        suzanneMesh = monkey;
+        suzannePosition = monkey->GetPosition();
+    }
+
     if (document.hasKey("HatMonkeyBall"))
     {
         json::JSON& ballJSON = document["HatMonkeyBall"];
@@ -223,11 +236,11 @@ void GameController::HandleLightMovementScene(GLFWwindow* activeWindow)
     sceneLight->Render(camera->GetProjection() * camera->GetView(), lights);
 
     Shader* diffShader = shaders["Diffuse"];
-    Mesh* suzanne = meshes["Suzanne"];
+    Mesh* suzanne = meshes["Fighter"];
 
     if (suzanne != nullptr) {
         suzanne->SetShader(diffShader);
-        RenderMesh("Suzanne");
+        RenderMesh("Fighter");
     }
 
     glm::vec3 posDisplay = sceneLight->GetPosition();
