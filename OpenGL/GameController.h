@@ -69,6 +69,7 @@ private:
     Mesh* fishInstance = nullptr;
     glm::vec3 suzannePosition = glm::vec3(0.0f);
 
+
     GLuint vao;
 
 private:
@@ -76,4 +77,10 @@ private:
 	inline ~GameController() = default;
 	inline explicit GameController(const GameController&) = delete;
 	inline GameController& operator=(const GameController&) = delete;
+
+public:
+
+    bool translate = false;
+    bool rotation = false;
+    bool scale = false;
 };

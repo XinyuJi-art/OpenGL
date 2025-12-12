@@ -5,6 +5,8 @@
 #define SCENE_MODE_MOVE_FISH 2
 #define SCENE_MODE_MOVE_SPACE 3
 
+#include "GameController.h"
+
 namespace OpenGL {
 
 	using namespace System;
@@ -22,6 +24,10 @@ namespace OpenGL {
 	public:
 		static bool moveLight, moveShip, moveFishes, resetLight, resetSuz, moveSpace;
 		float fighterRotation = 0.0;
+		float specularStrength1 = 0.0;
+		float specularColorR = 0.0;
+		float specularColorG = 0.0;
+		float specularColorB = 0.0;
 	private: System::Windows::Forms::RadioButton^ moveLightButton;
 	public:
 
@@ -111,6 +117,24 @@ namespace OpenGL {
 		fighterRotation = _rotation;
 		this->shipRotation->Value = fighterRotation;
 		label2->Text = fighterRotation.ToString();
+	}
+
+	void SetSpecularStrength(float _strength)
+	{
+		specularStrength1 = _strength;
+		this->specularStrength->Value = specularStrength1;
+		label3->Text = specularStrength1.ToString();
+	}
+
+	void SetColorRGB(float _r, float _g, float _b)
+	{
+		specularColorR = _r;
+		specularColorG = _g;
+		specularColorB = _b;
+
+		Rtrack->Value = _r * Rtrack->Maximum;
+		Gtrack->Value = _g * Gtrack->Maximum;
+		Btrack->Value = _b * Btrack->Maximum;
 	}
 
 	protected:
@@ -236,8 +260,6 @@ namespace OpenGL {
 		this->shipRotation->Name = L"shipRotation";
 		this->shipRotation->Size = System::Drawing::Size(810, 114);
 		this->shipRotation->TabIndex = 7;
-		this->shipRotation->Maximum = 10;
-		this->shipRotation->TickFrequency = 1;
 		this->shipRotation->Scroll += gcnew System::EventHandler(this, &ToolWindow::shipRotation_Scroll);
 		// 
 		// specularStrength
@@ -246,6 +268,7 @@ namespace OpenGL {
 		this->specularStrength->Name = L"specularStrength";
 		this->specularStrength->Size = System::Drawing::Size(810, 114);
 		this->specularStrength->TabIndex = 8;
+		this->specularStrength->Scroll += gcnew System::EventHandler(this, &ToolWindow::specularStrength_Scroll);
 		// 
 		// label2
 		// 
@@ -301,6 +324,7 @@ namespace OpenGL {
 		this->Rtrack->Name = L"Rtrack";
 		this->Rtrack->Size = System::Drawing::Size(810, 114);
 		this->Rtrack->TabIndex = 14;
+		this->Rtrack->Scroll += gcnew System::EventHandler(this, &ToolWindow::Rtrack_Scroll);
 		// 
 		// Gtrack
 		// 
@@ -308,6 +332,7 @@ namespace OpenGL {
 		this->Gtrack->Name = L"Gtrack";
 		this->Gtrack->Size = System::Drawing::Size(810, 114);
 		this->Gtrack->TabIndex = 15;
+		this->Gtrack->Scroll += gcnew System::EventHandler(this, &ToolWindow::Gtrack_Scroll);
 		// 
 		// Btrack
 		// 
@@ -315,6 +340,7 @@ namespace OpenGL {
 		this->Btrack->Name = L"Btrack";
 		this->Btrack->Size = System::Drawing::Size(810, 114);
 		this->Btrack->TabIndex = 16;
+		this->Btrack->Scroll += gcnew System::EventHandler(this, &ToolWindow::Btrack_Scroll);
 		// 
 		// translateButton
 		// 
@@ -325,6 +351,7 @@ namespace OpenGL {
 		this->translateButton->TabIndex = 17;
 		this->translateButton->Text = L"Translate";
 		this->translateButton->UseVisualStyleBackColor = true;
+		this->translateButton->CheckedChanged += gcnew System::EventHandler(this, &ToolWindow::translateButton_CheckedChanged);
 		// 
 		// rotateButton
 		// 
@@ -335,6 +362,7 @@ namespace OpenGL {
 		this->rotateButton->TabIndex = 18;
 		this->rotateButton->Text = L"Rotate";
 		this->rotateButton->UseVisualStyleBackColor = true;
+		this->rotateButton->CheckedChanged += gcnew System::EventHandler(this, &ToolWindow::rotateButton_CheckedChanged);
 		// 
 		// scaleButton
 		// 
@@ -345,6 +373,7 @@ namespace OpenGL {
 		this->scaleButton->TabIndex = 19;
 		this->scaleButton->Text = L"Scale";
 		this->scaleButton->UseVisualStyleBackColor = true;
+		this->scaleButton->CheckedChanged += gcnew System::EventHandler(this, &ToolWindow::scaleButton_CheckedChanged);
 		// 
 		// label6
 		// 
@@ -484,6 +513,28 @@ private: System::Void label1_Click(System::Object^ sender, System::EventArgs^ e)
 private: System::Void shipRotation_Scroll(System::Object^ sender, System::EventArgs^ e) {
 	fighterRotation = ((TrackBar^)sender)->Value;
 	label2->Text = fighterRotation.ToString();
+}
+private: System::Void specularStrength_Scroll(System::Object^ sender, System::EventArgs^ e) {
+	specularStrength1 = ((TrackBar^)sender)->Value;
+	label3->Text = specularStrength1.ToString();
+}
+private: System::Void Rtrack_Scroll(System::Object^ sender, System::EventArgs^ e) {
+	specularColorR = (float)((TrackBar^)sender)->Value / ((TrackBar^)sender)->Maximum;
+}
+private: System::Void Gtrack_Scroll(System::Object^ sender, System::EventArgs^ e) {
+	specularColorG = (float)((TrackBar^)sender)->Value / ((TrackBar^)sender)->Maximum;
+}
+private: System::Void Btrack_Scroll(System::Object^ sender, System::EventArgs^ e) {
+	specularColorB = (float)((TrackBar^)sender)->Value / ((TrackBar^)sender)->Maximum;
+}
+private: System::Void translateButton_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+	GameController::GetInstance().translate = translateButton->Checked;
+}
+private: System::Void rotateButton_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+	GameController::GetInstance().rotation = rotateButton->Checked;
+}
+private: System::Void scaleButton_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+	GameController::GetInstance().scale = scaleButton->Checked;
 }
 };
 }

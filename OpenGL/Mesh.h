@@ -29,6 +29,8 @@ public:
 	glm::vec3 GetRotation() { return rotation; }
 	float GetRotationRate() { return rotationRate; }
 	void SetRotationRate(float _rotation) { rotationRate = _rotation; }
+	void SetSpecularStrength(float _strength) { specularStrength = _strength; }
+	void SetSpecularColor(float _r, float _g, float _b) { specularColor = glm::vec3(_r, _g, _b); }
 	void SetLightDirection(glm::vec3 _lightDirection) { lightDirection = _lightDirection; }
 	glm::vec3 GetLightDirection() { return lightDirection; }
 	void SetLightColor(glm::vec3 _lightColor) { lightColor = _lightColor; }

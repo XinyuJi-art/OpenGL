@@ -191,7 +191,9 @@ void GameController::HandleResetRequests()
 
     if (OpenGL::ToolWindow::ConsumeResetSuzanne())
     {
-        suzanneMesh->SetPosition(glm::vec3(0.0f));
+        spaceShip->SetPosition(glm::vec3(0.0f));
+        spaceShip->SetRotation(glm::vec3(0.0f));
+        spaceShip->SetScale(glm::vec3(0.002f));
         suzannePosition = glm::vec3(0.0f);
     }
 }
@@ -256,8 +258,6 @@ void GameController::HandleLightMovementScene(GLFWwindow* activeWindow)
 // Color By Position
 void GameController::HandlePositionColorScene(GLFWwindow* activeWindow)
 {
-    Mesh* suzanneTarget = meshes["Suzanne"];
-    if (suzanneTarget == nullptr) return;
 
     Resolution screenRes = WindowController::GetInstance().GetResolution();
     double mouseX, mouseY;
@@ -272,19 +272,22 @@ void GameController::HandlePositionColorScene(GLFWwindow* activeWindow)
             (screenRes.height / 2 - mouseY) * Time::Instance().DeltaTime() * 0.05f,
             0.0f
         );
-        suzanneTarget->SetPosition(suzanneTarget->GetPosition() + worldCursorMove);
+
+
+        if(translate)
+            spaceShip->SetPosition(spaceShip->GetPosition() + worldCursorMove);
+        if(rotation)
+            spaceShip->SetRotation(spaceShip->GetRotation() + glm::vec3(-worldCursorMove.y, worldCursorMove.x, 0.0f) * 0.1f);
+        if (scale)
+            spaceShip->SetScale(spaceShip->GetScale() + glm::vec3(worldCursorMove.x, worldCursorMove.y, 0.0f) * 0.00001f);
     }
     else if (glfwGetMouseButton(activeWindow, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
     {
         worldCursorMove = glm::vec3(0.0f, 0.0f, (screenRes.height / 2 - mouseY) * Time::Instance().DeltaTime() * -0.01f);
-        suzanneTarget->SetPosition(suzanneTarget->GetPosition() + worldCursorMove);
     }
+    spaceShip->Render(camera->GetProjection() * camera->GetView(), lights);
 
-    Shader* posColorShader = shaders["PositionColor"];
-
-    RenderMesh("Suzanne");
-
-    glm::vec3 posDisplay = suzanneTarget->GetPosition();
+    glm::vec3 posDisplay = spaceShip->GetPosition();
     std::string outputText = "Suzanne Position: X=" +
         std::to_string(posDisplay.x) + ", Y=" +
         std::to_string(posDisplay.y) + ", Z=" +
@@ -293,7 +296,6 @@ void GameController::HandlePositionColorScene(GLFWwindow* activeWindow)
     textController->RenderText(outputText, 20, 60, 0.4f, { 1.0f, 1.0f, 0.0f });
 }
 
-// Move Cubes to Sphere(Not finished)
 void GameController::HandleCubesToSphereScene(GLFWwindow* activeWindow)
 {
     Mesh* ballTarget = meshes["Sphere"];
@@ -319,7 +321,11 @@ void GameController::RunGame()
     OpenGL::ToolWindow^ toolWindow = gcnew OpenGL::ToolWindow();
     toolWindow->Show();
     toolWindow->SetRotationRate(spaceShip->GetRotationRate());
+    toolWindow->SetSpecularStrength(spaceShip->GetSpecularStrength());
     GLFWwindow* window = WindowController::GetInstance().GetWindow();
+    glm::vec3 color = spaceShip->GetSpecularColor();
+    toolWindow->SetColorRGB(color.x, color.y, color.z);
+
 
     Time::Instance().Initialize();
 
@@ -336,6 +342,9 @@ void GameController::RunGame()
 
         if (toolWindow->moveLight)
         {
+            spaceShip->SetRotationRate(toolWindow->fighterRotation);
+            spaceShip->SetSpecularStrength(toolWindow->specularStrength1);
+            lights.front()->SetSpecularColor(toolWindow->specularColorR, toolWindow->specularColorG, toolWindow->specularColorB);
             HandleLightMovementScene(window);
         }
         else if (toolWindow->moveShip)
@@ -349,8 +358,7 @@ void GameController::RunGame()
             std::string messageOutput = "Total Cubes: " + std::to_string(cubeMeshes.size());
             textController->RenderText(messageOutput, 20, 60, 0.5f, { 1.0f, 1.0f, 0.0f });
         }
-
-        spaceShip->SetRotationRate(toolWindow->fighterRotation);
+        
         /*std::string fpsText = "FPS: " + std::to_string(Time::Instance().FPS());
         textController->RenderText(fpsText, 20, 100, 0.5f, { 1.0f, 1.0f, 0.0f });*/
 
