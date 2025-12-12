@@ -1,0 +1,27 @@
+#version 330
+
+in vec2 retTexCoords;
+
+out vec4 FragColor;
+
+uniform sampler2D screenTexture;
+
+uniform float Time;
+uniform float Frequency;
+uniform float Amplitude;
+uniform bool TintBlue;
+
+void main()
+{
+    vec2 newTexCoords = retTexCoords;
+
+    newTexCoords.y += sin(newTexCoords.x * Frequency + Time) * Amplitude;
+    newTexCoords.x += sin(newTexCoords.x * Frequency + Time) * Amplitude;
+
+    vec4 color = texture(screenTexture, newTexCoords);
+    if(TintBlue)
+        FragColor = vec4(color.r/2,color.g/2,color.b,color.a);
+    else
+        FragColor = color;
+	
+}

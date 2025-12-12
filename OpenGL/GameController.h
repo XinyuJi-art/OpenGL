@@ -8,8 +8,9 @@
 
 enum class SceneMode {
     MOVE_LIGHT = 0,
-    COLOR_BY_POSITION = 1,
-    MOVE_CUBES_TO_SPHERE = 2
+    MOVE_SHIP = 1,
+    MOVE_FISH = 2,
+	MOVE_SPACE = 3
 };
 
 class Mesh;
@@ -63,6 +64,9 @@ private:
     const float CUBE_SPEED = 2.0f;
     const float DELETE_DISTANCE = 0.5f;
     Mesh* suzanneMesh = nullptr;
+    Mesh* spaceShip = nullptr;
+    Mesh* fish = nullptr;
+    Mesh* fishInstance = nullptr;
     glm::vec3 suzannePosition = glm::vec3(0.0f);
 
     GLuint vao;

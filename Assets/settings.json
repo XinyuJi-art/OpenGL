@@ -2,39 +2,39 @@
   "DefaultFile" : "../Assets/Scenes/FinalProject.json",
   "ClearColor" : { "r" : 0.1, "g" : 0.1, "b" : 0.1 },
   "Camera" : { 
-    "Position" : { "x" : 5.0, "y" : 2.0, "z" : 5.0 },
+    "Position" : { "x" : 0.0, "y" : 0.0, "z" : 5.0 },
     "LookAt" : { "x" : 0.0, "y" : 0.0, "z" : 0.0 },
     "fov" : 45.0,
     "near" : 0.1,
     "far" : 1000.0,
-    "rotationRate" : 15.0,
+    "RotationRate" : 15.0,
     "speed" : 5.0
   },
   "Shaders": [
     {
       "name": "Color",
-      "vertex": "Color.vertexshader.bin",
-      "fragment": "Color.fragmentshader.bin"
+      "vertex": "Color.vertexshader",
+      "fragment": "Color.fragmentshader"
     },
     {
       "name": "Diffuse",
-      "vertex": "Diffuse.vertexshader.bin",
-      "fragment": "Diffuse.fragmentshader.bin"
+      "vertex": "Diffuse.vertexshader",
+      "fragment": "Diffuse.fragmentshader"
     },
     {
       "name": "Font",
-      "vertex": "Font.vertexshader.bin",
-      "fragment": "Font.fragmentshader.bin"
+      "vertex": "Font.vertexshader",
+      "fragment": "Font.fragmentshader"
     },
     {
       "name": "Skybox",
-      "vertex": "Skybox.vertexshader.bin",
-      "fragment": "Skybox.fragmentshader.bin"
+      "vertex": "Skybox.vertexshader",
+      "fragment": "Skybox.fragmentshader"
     },
     {
       "name": "DefaultPostProcessor",
-      "vertex": "PostProcessor.vertexshader.bin",
-      "fragment": "PostProcessor.fragmentshader.bin"
+      "vertex": "PostProcessor.vertexshader",
+      "fragment": "PostProcessor.fragmentshader"
     }
   ]  
 }

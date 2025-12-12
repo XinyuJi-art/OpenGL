@@ -8,6 +8,8 @@
 #include <string>
 #include <fstream>
 #include <map>
+#include <algorithm>
+#include <sstream>
 
 //Window specific includes and defines
 #ifdef _WIN32

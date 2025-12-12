@@ -141,6 +141,7 @@ copy/Y "$(SolutionDir)External\glfw-3.3.4\lib-vc2019\glfw3.dll" "$(TargetDir)"
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ASEMesh.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="EngineTime.cpp" />
     <ClCompile Include="Font.cpp" />
@@ -148,6 +149,7 @@ copy/Y "$(SolutionDir)External\glfw-3.3.4\lib-vc2019\glfw3.dll" "$(TargetDir)"
     <ClCompile Include="json.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="PostProcessor.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="TextController.cpp" />
     <ClCompile Include="Texture.cpp" />
@@ -165,8 +167,12 @@ copy/Y "$(SolutionDir)External\glfw-3.3.4\lib-vc2019\glfw3.dll" "$(TargetDir)"
     <None Include="Pointlightshader.vertexshader" />
     <None Include="PositionColor.fragmentshader" />
     <None Include="PositionColor.vertexshader" />
+    <None Include="PostProcessor.fragmentshader" />
+    <None Include="PostProcessor.vertexshader" />
     <None Include="SimpleFragmentShader.fragmentshader" />
     <None Include="SimpleVertexShader.vertexshader" />
+    <None Include="Skybox.fragmentshader" />
+    <None Include="Skybox.vertexshader" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -177,12 +183,14 @@ copy/Y "$(SolutionDir)External\glfw-3.3.4\lib-vc2019\glfw3.dll" "$(TargetDir)"
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\PROG50016-Resources-Game-Engine-Core-Files\TypeClass.h" />
+    <ClInclude Include="ASEMesh.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="EngineTime.h" />
     <ClInclude Include="Font.h" />
     <ClInclude Include="GameController.h" />
     <ClInclude Include="json.hpp" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="PostProcessor.h" />
     <ClInclude Include="Resolution.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="StandardIncludes.h" />

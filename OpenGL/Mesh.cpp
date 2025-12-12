@@ -1,7 +1,8 @@
 #include "Mesh.h"
-#include "Shader.h"
 #include "GameController.h"
 #include <OBJ_Loader.h>
+#include "ASEMesh.h"
+#include "Time.h"
 
 Mesh::~Mesh()
 {
@@ -149,11 +150,98 @@ void Mesh::LoadVec3(json::JSON& jsonData, const char* name, glm::vec3& vec)
 	if (data.hasKey("b")) vec.z = data["b"].ToFloat();
 }
 
-void Mesh::LoadObj(const std::string& _filename)
+void Mesh::LoadASE(const std::string& _file)
+{
+	ASEReader reader;
+	reader.ParseASEFile(_file.c_str());
+	ASEReader::MeshInfo& m = reader.GeoObjects[0]->MeshI;
+	ASEReader::Material* mat = reader.Materials[reader.GeoObjects[0]->MaterialID];
+
+	std::vector<objl::Vector3> tangents;
+	std::vector<objl::Vector3> bitangents;
+	std::vector<objl::Vertex> triangle;
+	objl::Vector3 tangent;
+	objl::Vector3 bitangent;
+	int vCount = 0;
+	for (int count = 0; count < m.NumFaces; count++)
+	{
+		glm::vec3 tF = m.TexFaces[count];
+		glm::vec3 f = m.Faces[count];
+		triangle.clear();
+
+		objl::Vertex vert = objl::Vertex();
+		vert.Position = objl::Vector3(m.Vertices[(int)f.x].x, m.Vertices[(int)f.x].y, m.Vertices[(int)f.x].z);
+		vert.Normal = objl::Vector3(m.VertexNormals[vCount].x, m.VertexNormals[vCount].y, m.VertexNormals[vCount].z);
+		vert.TextureCoordinate = objl::Vector2(m.TexVertices[(int)tF.x].x, m.TexVertices[(int)tF.x].y);
+		triangle.push_back(vert);
+
+		vCount++;
+
+		vert = objl::Vertex();
+		vert.Position = objl::Vector3(m.Vertices[(int)f.y].x, m.Vertices[(int)f.y].y, m.Vertices[(int)f.y].z);
+		vert.Normal = objl::Vector3(m.VertexNormals[vCount].x, m.VertexNormals[vCount].y, m.VertexNormals[vCount].z);
+		vert.TextureCoordinate = objl::Vector2(m.TexVertices[(int)tF.y].x, m.TexVertices[(int)tF.y].y);
+		triangle.push_back(vert);
+		vCount++;
+
+		vert = objl::Vertex();
+		vert.Position = objl::Vector3(m.Vertices[(int)f.z].x, m.Vertices[(int)f.z].y, m.Vertices[(int)f.z].z);
+		vert.Normal = objl::Vector3(m.VertexNormals[vCount].x, m.VertexNormals[vCount].y, m.VertexNormals[vCount].z);
+		vert.TextureCoordinate = objl::Vector2(m.TexVertices[(int)tF.z].x, m.TexVertices[(int)tF.z].y);
+		triangle.push_back(vert);
+		vCount++;
+
+		CalculateTangents(triangle, tangent, bitangent);
+		tangents.push_back(tangent);
+		bitangents.push_back(bitangent);
+
+		for (int c = 0; c < 3; c++)
+		{
+			vertexData.push_back(triangle[c].Position.X);
+			vertexData.push_back(triangle[c].Position.Y);
+			vertexData.push_back(triangle[c].Position.Z);
+			vertexData.push_back(triangle[c].Normal.X);
+			vertexData.push_back(triangle[c].Normal.Y);
+			vertexData.push_back(triangle[c].Normal.Z);
+			vertexData.push_back(triangle[c].TextureCoordinate.X);
+			vertexData.push_back(triangle[c].TextureCoordinate.Y);
+
+			int index = (vCount / 3) - 1;
+			vertexData.push_back(tangents[index].X);
+			vertexData.push_back(tangents[index].Y);
+			vertexData.push_back(tangents[index].Z);
+			vertexData.push_back(bitangents[index].X);
+			vertexData.push_back(bitangents[index].Y);
+			vertexData.push_back(bitangents[index].Z);
+		}
+	}
+
+	if (mat->Maps[0].Name == "DIFFUSE")
+	{
+		diffuseMap = "../Assets/Textures/" + RemoveFolder(mat->Maps[0].TextureFileName);
+	}
+	if (mat->Maps[1].Name == "SPECULAR")
+	{
+		specularMap = "../Assets/Textures/" + RemoveFolder(mat->Maps[1].TextureFileName);
+	}
+	if (mat->Maps[1].Name == "BUMP")
+	{
+		normalMap = "../Assets/Textures/" + RemoveFolder(mat->Maps[1].TextureFileName);
+		enableNormalMaps = true;
+	}
+	else if (mat->Maps[2].Name == "BUMP")
+	{
+		normalMap = "../Assets/Textures/" + RemoveFolder(mat->Maps[2].TextureFileName);
+		enableNormalMaps = true;
+	}
+}
+
+
+void Mesh::LoadOBJ(const std::string& _file)
 {
 	objl::Loader loader;
 
-	M_ASSERT(loader.LoadFile(_filename) == true, "Failed to load mesh");
+	M_ASSERT(loader.LoadFile(_file) == true, "Failed to load mesh");
 
 	for (auto& currentMesh : loader.LoadedMeshes)
 	{
@@ -172,7 +260,6 @@ void Mesh::LoadObj(const std::string& _filename)
 			tangents.push_back(tangent);
 			bitangents.push_back(bitangent);
 		}
-
 		for (unsigned int j = 0; j < currentMesh.Vertices.size(); j++)
 		{
 			vertexData.push_back(currentMesh.Vertices[j].Position.X);
@@ -206,14 +293,12 @@ void Mesh::LoadObj(const std::string& _filename)
 	{
 		specularMap = "../Assets/Textures/" + RemoveFolder(loader.LoadedMaterials[0].map_Ks);
 	}
-
 	if (loader.LoadedMaterials[0].map_bump != "")
 	{
 		enableNormalMaps = true;
 		normalMap = "../Assets/Textures/" + RemoveFolder(loader.LoadedMaterials[0].map_bump);
 	}
 }
-
 void Mesh::Create(json::JSON& jsonData)
 {
 	M_ASSERT(jsonData.hasKey("Shader"), "Shader is required.");
@@ -222,24 +307,6 @@ void Mesh::Create(json::JSON& jsonData)
 	if (jsonData.hasKey("Position")) LoadVec3(jsonData, "Position", position);
 	if (jsonData.hasKey("RotationRate")) rotationRate = jsonData["RotationRate"].ToFloat();
 	if (jsonData.hasKey("Scale")) LoadVec3(jsonData, "Scale", scale);
-
-	if (jsonData.hasKey("Type"))
-	{
-		std::string typeStr = jsonData["Type"].ToString();
-		if (typeStr == "Directional") {
-			lightType = DIRECTIONAL_LIGHT;
-		}
-		else if (typeStr == "Point") {
-			lightType = POINT_LIGHT;
-		}
-		else if (typeStr == "Spot") {
-			lightType = SPOT_LIGHT;
-		}
-		else {
-			lightType = NONE;
-			std::cerr << "Warning: Unknown light type: " << typeStr << std::endl;
-		}
-	}
 
 	if (jsonData.hasKey("LightDirection"))
 	{
@@ -270,7 +337,16 @@ void Mesh::Create(json::JSON& jsonData)
 	}
 
 	M_ASSERT(jsonData.hasKey("Model"), "Model file is required");
-	LoadObj(jsonData["Model"].ToString());
+	std::string filename = jsonData["Model"].ToString();
+	if (EndsWith(filename, "ase"))
+	{
+		LoadASE(jsonData["Model"].ToString());
+	}
+	else
+	{
+		LoadOBJ(jsonData["Model"].ToString());
+	}
+
 
 	diffuseTexture = new Texture();
 	if (diffuseMap.size() > 0) diffuseTexture->LoadTexture(diffuseMap.c_str());
@@ -418,7 +494,6 @@ void Mesh::SetShaderVariables(glm::mat4 _pv, const std::list<Mesh*>& _lights)
 
 	int i = 0;
 	for (auto& light : _lights) {
-		shader->SetInt(Concat("light[", i, "].type").c_str(), light->GetLightType());// DIRECTIONAL_LIGHT = 1, POINT_LIGHT = 2, SPOT_LIGHT = 3, NONE = 0
 		shader->SetVec3(Concat("light[", i, "].position").c_str(), light->GetPosition());
 		shader->SetVec3(Concat("light[", i, "].direction").c_str(), light->GetLightDirection());
 
@@ -440,7 +515,7 @@ void Mesh::SetShaderVariables(glm::mat4 _pv, const std::list<Mesh*>& _lights)
 	shader->SetTextureSampler("material.normalTexture", GL_TEXTURE2, 2, normalTexture->GetTexture());
 }
 
-void Mesh::Render(glm::mat4 _pv, const std::list<Mesh*>& _lights, int _instanceCount)
+void Mesh::Render(glm::mat4 _pv, const std::list<Mesh*>& _lights)
 {
 	glUseProgram(shader->GetProgramID());
 	CalculateTransform();
@@ -449,7 +524,7 @@ void Mesh::Render(glm::mat4 _pv, const std::list<Mesh*>& _lights, int _instanceC
 
 	if (enableInstancing) 
 	{
-		glDrawArraysInstanced(GL_TRIANGLES, 0, vertexData.size() / vertexStride, _instanceCount);
+		glDrawArraysInstanced(GL_TRIANGLES, 0, vertexData.size() / vertexStride, instanceCount);
 	}
 	else
 	{
@@ -466,4 +541,10 @@ void Mesh::Render(glm::mat4 _pv, const std::list<Mesh*>& _lights, int _instanceC
 		glDisableVertexAttribArray(shader->GetAttrInstanceMatrix() + 2);
 		glDisableVertexAttribArray(shader->GetAttrInstanceMatrix() + 3);
 	}
+}
+
+bool Mesh::EndsWith(const std::string& _str, const std::string& _suffix)
+{
+
+	return 	_str.size() >= _suffix.size() && 0 == _str.compare(_str.size() - _suffix.size(), _suffix.size(), _suffix);
 }

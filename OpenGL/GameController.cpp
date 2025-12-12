@@ -30,14 +30,14 @@ void GameController::Load()
 	std::ifstream inputStream("../Assets/settings.json");
     std::string str((std::istreambuf_iterator<char>(inputStream)),
 		std::istreambuf_iterator<char>());
-	json::JSON document = json::JSON::Load(str);
+	json::JSON setdocument = json::JSON::Load(str);
 #pragma endregion
 
 #pragma region Clear Color
 	glm::vec3 ClearColor = { 0.0f, 0.0f, 0.0f };
-	if (document.hasKey("ClearColor"))
+	if (setdocument.hasKey("ClearColor"))
     {
-		json::JSON& jsonClearColor = document["ClearColor"]; 
+		json::JSON& jsonClearColor = setdocument["ClearColor"]; 
         if (jsonClearColor.hasKey("r")) ClearColor.x = jsonClearColor["r"].ToFloat();
 		if (jsonClearColor.hasKey("g")) ClearColor.y = jsonClearColor["g"].ToFloat();
 		if (jsonClearColor.hasKey("b")) ClearColor.z = jsonClearColor["b"].ToFloat();
@@ -51,9 +51,9 @@ void GameController::Load()
 	float _far = 1000.0f;
 	glm::vec3 CameraPosition = { 1, 0, 0 };
 	glm::vec3 CameraLookAt = { 0, 0, 0 };
-    if (document.hasKey("Camera"))
+    if (setdocument.hasKey("Camera"))
     {
-        json::JSON& jsonCamera = document["Camera"];
+        json::JSON& jsonCamera = setdocument["Camera"];
         if (jsonCamera.hasKey("Position"))
         {
             json::JSON& jsonCameraObject = jsonCamera["Position"];
@@ -77,9 +77,9 @@ void GameController::Load()
 #pragma endregion
 
 #pragma region Shader
-    if (document.hasKey("Shaders"))
+    if (setdocument.hasKey("Shaders"))
     {
-		json::JSON& shadersJSON = document["Shaders"];
+		json::JSON& shadersJSON = setdocument["Shaders"];
         for (auto& shaderJSON : shadersJSON.ArrayRange())
         {
             assert(shaderJSON.hasKey("name"));
@@ -93,26 +93,25 @@ void GameController::Load()
 #pragma endregion
 
 #pragma region Scene
-	M_ASSERT(document.hasKey("DefaultFile"), "Settings requires a default file.");
-	std::string defaultFile = document["DefaultFile"].ToString();
+	M_ASSERT(setdocument.hasKey("DefaultFile"), "Settings requires a default file.");
+	std::string defaultFile = setdocument["DefaultFile"].ToString();
 
-	inputStream = std::ifstream(defaultFile);
-    str = std::string((std::istreambuf_iterator<char>(inputStream)),
-		std::istreambuf_iterator<char>());
-	document = json::JSON::Load(str);
+    std::fstream ninputStream(defaultFile);
+    std::string nstr((std::istreambuf_iterator<char>(ninputStream)), std::istreambuf_iterator<char>());
+    json::JSON scene = json::JSON::Load(nstr);
 
-    if (document.hasKey("Light"))
+    if (scene.hasKey("Light"))
     {
-        json::JSON& lightJSON = document["Light"];
+        json::JSON& lightJSON = scene["Light"];
         Mesh* light = new Mesh();
         light->Create(lightJSON);
         light->SetCameraPosition(camera->GetPosition());
 		lights.push_back(light);
     }
 
-    if (document.hasKey("Suzanne"))
+    if (scene.hasKey("Suzanne"))
     {
-        json::JSON& monkeyJSON = document["Suzanne"];
+        json::JSON& monkeyJSON = scene["Suzanne"];
         Mesh* monkey = new Mesh();
         monkey->Create(monkeyJSON);
         monkey->SetCameraPosition(camera->GetPosition());
@@ -123,34 +122,38 @@ void GameController::Load()
         suzannePosition = monkey->GetPosition();
     }
 
-    if (document.hasKey("Suzanne"))
+    if (scene.hasKey("Fighter"))
     {
-        json::JSON& monkeyJSON = document["Suzanne"];
-        Mesh* monkey = new Mesh();
-        monkey->Create(monkeyJSON);
-        monkey->SetCameraPosition(camera->GetPosition());
-
-        meshes.emplace("Suzanne", monkey);
-
-        suzanneMesh = monkey;
-        suzannePosition = monkey->GetPosition();
-    }
-
-    if (document.hasKey("HatMonkeyBall"))
-    {
-        json::JSON& ballJSON = document["HatMonkeyBall"];
         Mesh* mesh = new Mesh();
-        mesh->Create(ballJSON);
+        mesh->Create(scene["Fighter"]);
         mesh->SetCameraPosition(camera->GetPosition());
-
-        meshes.emplace("Sphere", mesh);
-        sphereMesh = mesh;
+        spaceShip = mesh;
     }
+    if (scene.hasKey("Fish"))
+    {
+        Mesh* mesh = new Mesh();
+        mesh->Create(scene["Fish"]);
+        mesh->SetCameraPosition(camera->GetPosition());
+        fish = mesh;
+    }
+    if (scene.hasKey("FishInstance"))
+    {
+        Mesh* mesh = new Mesh();
+        mesh->Create(scene["FishInstance"]);
+        mesh->SetCameraPosition(camera->GetPosition());
+        fishInstance = mesh;
+    }
+
+    //if (scene.hasKey("Skybox"))
+    //{
+    //    skybox = new SkyBox();
+    //    skybox->Create(scene["Skybox"]);
+    //}
 
     #pragma region Fonts
-    if (document.hasKey("Fonts"))
+    if (scene.hasKey("Fonts"))
         {
-            json::JSON& fontsJSON = document["Fonts"];
+            json::JSON& fontsJSON = scene["Fonts"];
             for (auto& fontJSON : fontsJSON.ArrayRange())
             {
                 M_ASSERT(fontJSON.hasKey("Name"), "Font requires a name");
@@ -166,10 +169,10 @@ void GameController::Load()
     #pragma endregion
 
     #pragma region TextController
-        if (document.hasKey("TextController"))
+        if (scene.hasKey("TextController"))
         {   
             textController = new TextController();
-            textController->Create(document["TextController"]);
+            textController->Create(scene["TextController"]);
         }
     #pragma endregion
 #pragma endregion
@@ -203,7 +206,7 @@ void GameController::RenderMesh(const std::string& meshKey)
 
         currentMesh->SetRotation(currentRot + Time::Instance().DeltaTime() * glm::vec3(0.0f, rotRate, 0.0f));
 
-        currentMesh->Render(camera->GetProjection() * camera->GetView(), lights, 1);
+        currentMesh->Render(camera->GetProjection() * camera->GetView(), lights);
     }
 }
 
@@ -236,12 +239,10 @@ void GameController::HandleLightMovementScene(GLFWwindow* activeWindow)
     sceneLight->Render(camera->GetProjection() * camera->GetView(), lights);
 
     Shader* diffShader = shaders["Diffuse"];
-    Mesh* suzanne = meshes["Fighter"];
 
-    if (suzanne != nullptr) {
-        suzanne->SetShader(diffShader);
-        RenderMesh("Fighter");
-    }
+    spaceShip->SetRotation(spaceShip->GetRotation() + Time::Instance().DeltaTime() * glm::vec3(spaceShip->GetRotationRate(), 0.0f, 0.0f));
+	spaceShip->Render(camera->GetProjection() * camera->GetView(), lights);
+
 
     glm::vec3 posDisplay = sceneLight->GetPosition();
     std::string outputText = "Light Position: X=" +
@@ -281,7 +282,6 @@ void GameController::HandlePositionColorScene(GLFWwindow* activeWindow)
 
     Shader* posColorShader = shaders["PositionColor"];
 
-    suzanneTarget->SetShader(posColorShader);
     RenderMesh("Suzanne");
 
     glm::vec3 posDisplay = suzanneTarget->GetPosition();
@@ -300,7 +300,6 @@ void GameController::HandleCubesToSphereScene(GLFWwindow* activeWindow)
     if (ballTarget == nullptr) return;
 
     Shader* diffShader = shaders["Diffuse"];
-    sphereMesh->SetShader(diffShader);
 
     RenderMesh("Sphere");
 
@@ -319,7 +318,7 @@ void GameController::RunGame()
 {
     OpenGL::ToolWindow^ toolWindow = gcnew OpenGL::ToolWindow();
     toolWindow->Show();
-
+    toolWindow->SetRotationRate(spaceShip->GetRotationRate());
     GLFWwindow* window = WindowController::GetInstance().GetWindow();
 
     Time::Instance().Initialize();
@@ -339,11 +338,11 @@ void GameController::RunGame()
         {
             HandleLightMovementScene(window);
         }
-        else if (toolWindow->colorPos)
+        else if (toolWindow->moveShip)
         {
             HandlePositionColorScene(window);
         }
-        else if (toolWindow->moveCubes)
+        else if (toolWindow->moveFishes)
         {
             HandleCubesToSphereScene(window);
 
@@ -351,6 +350,7 @@ void GameController::RunGame()
             textController->RenderText(messageOutput, 20, 60, 0.5f, { 1.0f, 1.0f, 0.0f });
         }
 
+        spaceShip->SetRotationRate(toolWindow->fighterRotation);
         /*std::string fpsText = "FPS: " + std::to_string(Time::Instance().FPS());
         textController->RenderText(fpsText, 20, 100, 0.5f, { 1.0f, 1.0f, 0.0f });*/
 

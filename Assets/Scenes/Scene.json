@@ -1,75 +1,67 @@
 {
-  "Light": {
-    "Shader": "Color",
-    "Model": "../Assets/Models/Sphere.obj",
-    "Position": {
-      "x": 0.0,
-      "y": 0.0,
-      "z": 0.0
-    },
-    "Scale": {
-      "x": 0.1,
-      "y": 0.1,
-      "z": 0.1
-    },
-    "LightColor": {
-      "r": 1.0,
-      "g": 1.0,
-      "b": 1.0
-    },
-    "AmbientColor": {
-      "r": 1.0,
-      "g": 1.0,
-      "b": 1.0
-    },
-    "SpecularColor": {
-      "r": 3.0,
-      "g": 3.0,
-      "b": 3.0
+  "Lights": [
+    {
+      "Shader": "Color",
+      "Model": "../Assets/Models/Sphere.obj",
+      "Position": {
+        "x": 3.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "Scale": {
+        "x": 0.1,
+        "y": 0.1,
+        "z": 0.1
+      },
+      "LightColor": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      },
+      "AmbientColor": {
+        "r": 0.5,
+        "g": 0.5,
+        "b": 0.5
+      },
+      "SpecularColor": {
+        "r": 3.0,
+        "g": 3.0,
+        "b": 3.0
+      }
     }
-  },
-  "Suzanne": {
-    "Shader": "Diffuse",
-    "Model": "../Assets/Models/HatMonkey.obj",
-    "Position": {
-      "x": 0.0,
-      "y": 0.0,
-      "z": 0.0
-    },
-    "Scale": {
-      "x": 1.0,
-      "y": 1.0,
-      "z": 1.0
-    },
-    "SpecularStrength": 8.0,
-    "RotationRate": 0.0
-  },
-  "Sphere": {
-    "Shader": "Diffuse",
-    "Model": "../Assets/Models/HatMonkeyBall.obj",
-    "Position": {
-      "x": 0.0,
-      "y": 0.0,
-      "z": 0.0
-    },
-    "Scale": {
-      "x": 1.0,
-      "y": 1.0,
-      "z": 1.0
-    },
-    "SpecularStrength": 8.0,
-    "RotationRate": 0.0
-  },
-  "Cube": {
-    "Shader": "Diffuse",
-    "Model": "../Assets/Models/Cube.obj",
-    "Scale": {
-      "x": 0.5,
-      "y": 0.5,
-      "z": 0.5
-    },
-    "SpecularStrength": 8.0,
-    "RotationRate": 0.0
+  ],
+  "Meshes": [
+    {
+      "Shader": "Diffuse",
+      "Model": "../Assets/Models/Fighter.ase",
+      "Position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "Scale": {
+        "x": 0.002,
+        "y": 0.002,
+        "z": 0.002
+      },
+      "SpecularStrength": 8.0,
+      "RotationRate": 1.0,
+      "InstanceXRange" : 0,
+      "InstanceYRange" : 0,
+      "InstanceZRange" : 0
+    }
+  ],
+  "Skybox":{
+    "Shader" :"Skybox",
+    "Model" :"../Assets/Models/Skybox.obj",
+    "Faces" : [
+      "../Assets/Textures/Skybox/right.jpg",
+      "../Assets/Textures/Skybox/left.jpg",
+      "../Assets/Textures/Skybox/top.jpg",
+      "../Assets/Textures/Skybox/bottom.jpg",
+      "../Assets/Textures/Skybox/front.jpg",
+      "../Assets/Textures/Skybox/back.jpg"
+    ]
   },
   "Fonts": [
     {
@@ -82,6 +74,9 @@
     }
   ],
   "TextController": {
-    "Font": "Arial"
+    "Font" : "Arial"
+  },
+  "PostProcessor":{
+    "Shader" : "DefaultPostProcessor"
   }
 }

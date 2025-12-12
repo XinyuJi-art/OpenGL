@@ -57,6 +57,12 @@
     <ClCompile Include="TextController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ASEMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PostProcessor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SimpleFragmentShader.fragmentshader">
@@ -93,6 +99,18 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="PositionColor.fragmentshader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Skybox.fragmentshader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Skybox.vertexshader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="PostProcessor.fragmentshader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="PostProcessor.vertexshader">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
@@ -137,6 +155,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TextController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ASEMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PostProcessor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
